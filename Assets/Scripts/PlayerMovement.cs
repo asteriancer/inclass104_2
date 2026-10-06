@@ -3,45 +3,60 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] float controlSpeed = 12f;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header ("Movement Parameters")]
+    [SerializeField] float controlSpeed = 20f;
+    [SerializeField] float xClampedRange = 5f;
+    [SerializeField] float yClampedRange = 8f;
 
-    [Header("Bounds")]
-    [SerializeField] float xRange = 8f;
-    [SerializeField] float yMin = -4f;
-    [SerializeField] float yMax = 5f;
+    [Header("Player Rotation")]
 
-    [Header("Smoothing")]
-    [SerializeField] float smoothTime = 0.12f;   // büyüdükçe daha yumuşak (ama daha geç tepki)
+    [SerializeField] float rollControl = 20f;
+    [SerializeField] float pitchControl = 15f;
+    [SerializeField] float rotationSpeed = 10f;
 
-    [Header("Tilt")]
-    [SerializeField] float rollAmount = 25f;     // sağa/sola giderken yatma
-    [SerializeField] float pitchAmount = 12f;    // yukarı/aşağı giderken burun
-    [SerializeField] float rotationSpeed = 8f;
 
-    Vector2 movement;          // ham input (0 ya da 1)
-    Vector2 smoothMovement;    // yumuşatılmış input
-    Vector2 smoothVelocity;
+    Vector2 movement;
 
-    void Update()
+    void Start()
     {
-        // Input'u yavaş yavaş hedefe yaklaştır -> hızlanma / yavaşlama hissi
-        smoothMovement = Vector2.SmoothDamp(smoothMovement, movement, ref smoothVelocity, smoothTime);
 
-        float xOffset = smoothMovement.x * controlSpeed * Time.deltaTime;
-        float yOffset = smoothMovement.y * controlSpeed * Time.deltaTime;
-
-        float xPos = Mathf.Clamp(transform.localPosition.x + xOffset, -xRange, xRange);
-        float yPos = Mathf.Clamp(transform.localPosition.y + yOffset, yMin, yMax);
-
-        transform.localPosition = new Vector3(xPos, yPos, transform.localPosition.z);
-
-        // Hareket yönüne göre hafif yatma
-        Quaternion targetRotation = Quaternion.Euler(-smoothMovement.y * pitchAmount, 0f, -smoothMovement.x * rollAmount);
-        transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, rotationSpeed * Time.deltaTime);
     }
 
+    // Update is called once per frame
+    void Update()
+    {
+        ProcessTranslation();
+        ProcessRotation();
+
+    }
+
+    
     public void OnMove(InputValue value)
     {
+        Debug.Log(value.Get<Vector2>());
         movement = value.Get<Vector2>();
+
+    }
+    private void ProcessTranslation()
+    {
+        float xOffset = movement.x * controlSpeed * Time.deltaTime;
+        float xPos = transform.localPosition.x + xOffset;
+        float xClampedPos = Mathf.Clamp(xPos, -xClampedRange, xClampedRange);
+
+
+        float yOffset = movement.y * controlSpeed * Time.deltaTime;
+        float yPos = transform.localPosition.y + yOffset;
+        float yClampedPos = Mathf.Clamp(yPos, -yClampedRange, yClampedRange);
+
+
+        transform.localPosition = new Vector3(xClampedPos, yClampedPos, 0f);
+    }
+
+    private void ProcessRotation()
+    {
+        //Hard coding rotation...
+        Quaternion targetRotation = Quaternion.Euler(-pitchControl * movement.y , 0f, rollControl * movement.x);
+        transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRotation, Time.deltaTime * 5);
     }
 }
