@@ -3,54 +3,76 @@ using UnityEngine.InputSystem;
 
 public class PlayerWeapon : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("References")]
+    [SerializeField] GameObject[] lasers;
+    [SerializeField] RectTransform crosshair;
+    [SerializeField] Transform targetPoint;
+
+    [Header("Aiming")]
+    [SerializeField] float maxAimDistance = 500f;     // raycast'in ne kadar uzağa bakacağı
+    [SerializeField] float defaultAimDistance = 200f; // hiçbir şeye çarpmazsa hedef mesafesi
 
     bool isFiring = false;
 
-    [SerializeField] GameObject[] lasers;
-    [SerializeField] RectTransform crosshair;
-    [SerializeField] float targetDistance =100f;
-    [SerializeField] Transform targetPoint;
     void Start()
     {
         Cursor.visible = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         ProcessFire();
         MoveCrosshair();
         MoveTargetPoint();
+        AimLasers();
     }
+
+    // Input Actions'taki Fire aksiyonu tarafından çağrılır
     public void OnFire(InputValue value)
     {
         isFiring = value.isPressed;
-        //Debug.Log("Firing");
     }
 
+    // Ateş tuşu basılıyken lazerlerin emission'ını açar, bırakınca kapatır
     void ProcessFire()
     {
-        if (isFiring)
-        {
-            Debug.Log("Fire");
-        }
-        
         foreach (GameObject laser in lasers)
         {
             var emission = laser.GetComponent<ParticleSystem>().emission;
             emission.enabled = isFiring;
         }
     }
+
+    // UI nişangahı mouse'un ekrandaki konumuna taşır
     void MoveCrosshair()
     {
-        crosshair.position = Input.mousePosition;
-
+        crosshair.position = Mouse.current.position.ReadValue();
     }
 
+    // Mouse konumundan dünyaya ışın atar; bir şeye çarparsa hedef orası olur
     void MoveTargetPoint()
     {
-        Vector3 targetPositionPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, targetDistance);
-        targetPoint.position = Camera.main.ScreenToWorldPoint(targetPositionPos);
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Ray ray = Camera.main.ScreenPointToRay(mousePos);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, maxAimDistance))
+        {
+            targetPoint.position = hit.point;
+        }
+        else
+        {
+            targetPoint.position = ray.GetPoint(defaultAimDistance);
+        }
+    }
+
+    // İki lazeri de geminin merkezinden hedefe doğru aynı açıyla çevirir
+    void AimLasers()
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(targetPoint.position - transform.position);
+
+        foreach (GameObject laser in lasers)
+        {
+            laser.transform.rotation = targetRotation;
+        }
     }
 }

@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float rollControl = 20f;
     [SerializeField] float pitchControl = 15f;
     [SerializeField] float rotationSpeed = 10f;
+    [SerializeField] Transform targetPoint; //bunu ben ekledim
 
 
     Vector2 movement;
@@ -53,10 +54,21 @@ public class PlayerMovement : MonoBehaviour
         transform.localPosition = new Vector3(xClampedPos, yClampedPos, 0f);
     }
 
+    //private void ProcessRotation()
+    //{
+    //    //Hard coding rotation...
+    //    Quaternion targetRotation = Quaternion.Euler(-pitchControl * movement.y , 0f, rollControl * movement.x);
+    //    transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRotation, Time.deltaTime * 5);
+    //}
     private void ProcessRotation()
     {
-        //Hard coding rotation...
-        Quaternion targetRotation = Quaternion.Euler(-pitchControl * movement.y , 0f, rollControl * movement.x);
-        transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRotation, Time.deltaTime * 5);
+        Vector3 directionWorld = targetPoint.position - transform.position;
+        Vector3 directionLocal = transform.parent.InverseTransformDirection(directionWorld);
+        Quaternion aimRotation = Quaternion.LookRotation(directionLocal);
+
+        Quaternion inputRotation = Quaternion.Euler(-pitchControl * movement.y, 0f, rollControl * movement.x);
+
+        Quaternion targetRotation = aimRotation * inputRotation;
+        transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 }
