@@ -9,8 +9,8 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] Transform targetPoint;
 
     [Header("Aiming")]
-    [SerializeField] float maxAimDistance = 500f;     // raycast'in ne kadar uzağa bakacağı
-    [SerializeField] float defaultAimDistance = 200f; // hiçbir şeye çarpmazsa hedef mesafesi
+    [SerializeField] float maxAimDistance = 500f;     
+    [SerializeField] float defaultAimDistance = 200f; 
 
     bool isFiring = false;
 
@@ -27,13 +27,13 @@ public class PlayerWeapon : MonoBehaviour
         AimLasers();
     }
 
-    // Input Actions'taki Fire aksiyonu tarafından çağrılır
+    
     public void OnFire(InputValue value)
     {
         isFiring = value.isPressed;
     }
 
-    // Ateş tuşu basılıyken lazerlerin emission'ını açar, bırakınca kapatır
+    
     void ProcessFire()
     {
         foreach (GameObject laser in lasers)
@@ -43,13 +43,13 @@ public class PlayerWeapon : MonoBehaviour
         }
     }
 
-    // UI nişangahı mouse'un ekrandaki konumuna taşır
+    
     void MoveCrosshair()
     {
         crosshair.position = Mouse.current.position.ReadValue();
     }
 
-    // Mouse konumundan dünyaya ışın atar; bir şeye çarparsa hedef orası olur
+    
     void MoveTargetPoint()
     {
         Vector2 mousePos = Mouse.current.position.ReadValue();
@@ -65,7 +65,7 @@ public class PlayerWeapon : MonoBehaviour
         }
     }
 
-    // İki lazeri de geminin merkezinden hedefe doğru aynı açıyla çevirir
+    
     void AimLasers()
     {
         Quaternion targetRotation = Quaternion.LookRotation(targetPoint.position - transform.position);
